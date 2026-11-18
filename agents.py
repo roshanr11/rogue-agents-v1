@@ -110,6 +110,8 @@ def chat(system, user, max_tokens=700):
     if os.path.exists(path):
         STATS["cached"] += 1
         return json.load(open(path))["text"]
+    if os.environ.get("CACHE_ONLY"):
+        raise RuntimeError("cache miss with CACHE_ONLY=1 (this game diverged from the cached run)")
     body = json.dumps(dict(model=MODEL, max_tokens=max_tokens, temperature=1.0,
                            messages=[dict(role="system", content=system), dict(role="user", content=user)])).encode()
     for attempt in range(5):

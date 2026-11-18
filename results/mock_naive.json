@@ -18,6 +18,19 @@
    "rogue_disclosures_per_game": 4.7,
    "honest_slips_per_game": 0.925
   },
+  "baseline_flags": {
+   "games": 200,
+   "catch_rate": 0.32,
+   "catch_rate_when_rogue_struck": 0.4050632911392405,
+   "games_rogue_struck": 158,
+   "median_round_caught": 8.0,
+   "false_quarantines_per_game": 0.605,
+   "final_task_error": 0.19583333333333333,
+   "task_completion": 0.96,
+   "unauthorized_disclosures_per_game": 7.3,
+   "rogue_disclosures_per_game": 5.895,
+   "honest_slips_per_game": 0.97
+  },
   "provenance": {
    "games": 200,
    "catch_rate": 0.77,

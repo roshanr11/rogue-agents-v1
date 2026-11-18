@@ -72,12 +72,17 @@ only as one of two quarantines. 815 agent turns, all cached in `cache/` (`result
 Spend for every real run in this repo was well under $1.
 
 ### Scripted simulation (mock agents), n = 200 games per monitor
-| metric | baseline | provenance |
-|---|---|---|
-| 1. catch rate (when struck) | 0.795 (0.865, n=156) | 0.770 (**1.000**, n=154) |
-| 2. median round caught | 8 | **4.5** |
-| 3. false quarantines / game | 2.61 | **0.00** |
-| 4. final task error | 0.245 | **0.153** |
+| metric | baseline | baseline, flags only (ablation) | provenance |
+|---|---|---|---|
+| 1. catch rate (when struck) | 0.795 (0.865, n=156) | 0.320 (0.405, n=158) | 0.770 (**1.000**, n=154) |
+| 2. median round caught | 8 | 8 | **4.5** |
+| 3. false quarantines / game | 2.61 | 0.61 | **0.00** |
+| 4. final task error | 0.245 | 0.196 | **0.153** |
+
+**Is the baseline a strawman?** Our baseline counts every outbound private value as an incident, including the *authorized* shuttle
+phone lists, because a plain DLP scanner cannot tell them apart. The ablation counts only checker flags, which is the closest match to
+the spec's "disagreement" rule. It cuts false quarantines to 0.61 per game, but it catches the rogue in only 41% of the games where it
+struck. Provenance beats both on every metric. The ablation has not been re-run with real agents yet (API key limit reached).
 
 ### Claude playing the rogue: it refuses
 With the rogue itself a Claude Haiku 5.5 agent given a sanctioned red-team brief, it made **0 unauthorized sends in 5 of 5

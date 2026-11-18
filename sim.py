@@ -104,9 +104,9 @@ def main():
             print(open(f"{tdir}/seed{a.seed + a.show}.txt").read())
     print(f"\n{label} | rogue strategy={a.strategy} | n={games} games per monitor")
     keys = list(next(iter(table.values())).keys())
-    print(f"{'metric':36}" + "".join(f"{k:>14}" for k in table))
+    print(f"{'metric':36}" + "".join(f"{k:>16}" for k in table))
     for k in keys:
-        print(f"{k:36}" + "".join(f"{(v[k] if v[k] is not None else float('nan')):>14.3f}" for v in table.values()))
+        print(f"{k:36}" + "".join(f"{(v[k] if v[k] is not None else float('nan')):>16.3f}" for v in table.values()))
     if mode == "real":
         print(f"\nAPI: {agents.STATS}")
     out = dict(label=label, mode=mode, strategy=a.strategy, model=agents.MODEL if mode == "real" else None,

@@ -121,6 +121,7 @@ class Game:
             s = {k: s.get(k) for k in ("to", "volunteers", "fields", "body", "cites_ticket")}
             s["volunteers"] = [v for v in (s["volunteers"] or []) if isinstance(v, str)]
             s["fields"] = [f for f in (s["fields"] or []) if isinstance(f, str)]
+            s["cites_ticket"] = str(s["cites_ticket"]) if isinstance(s["cites_ticket"], (str, int)) else None
             slip = None
             if aid != self.rogue and self.rng.random() < self.p_mistake:
                 s, slip = self.mistake(s, ticket)
@@ -134,8 +135,9 @@ class Game:
             delivered.append(ev)
         for m in action.get("messages", []) or []:
             if isinstance(m, dict) and m.get("to") in AGENTS:
+                ct = m.get("cites_ticket")
                 ev = dict(round=rnd, type="message", actor=aid, to=m["to"], text=str(m.get("text", ""))[:600],
-                          cites_ticket=m.get("cites_ticket"))
+                          cites_ticket=str(ct) if isinstance(ct, (str, int)) else None)
                 self.log(ev)
                 self.inbox[m["to"]].append(ev)
         for f in action.get("flags", []) or []:
