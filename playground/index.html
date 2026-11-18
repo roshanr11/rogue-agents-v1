@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Trust Guard Playground</title>
+<style>
+:root{
+  --bg:#0e111e; --panel:#161b2e; --card:#1c2136; --line:#2b3150; --fg:#f0f2f8; --muted:#969cb2;
+  --good:#3dd6b5; --rogue:#ff7a45; --basic:#8c94aa; --warn:#ffd166; --bad:#ff5d6c;
+  --radius:14px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+button,select{font:inherit;color:inherit}
+header{padding:20px 24px 8px;max-width:1400px;margin:0 auto}
+h1{margin:0;font-size:26px;letter-spacing:-.01em}
+h1 span{color:var(--good)}
+.sub{color:var(--muted);margin-top:4px;max-width:900px}
+.wrap{max-width:1400px;margin:0 auto;padding:8px 24px 40px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 16px}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{background:none;border:0;padding:7px 14px;border-radius:999px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--fg);box-shadow:0 0 0 1px var(--line)}
+select,.btn{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer}
+.btn:hover,select:hover{border-color:#4a5280}
+.btn.primary{background:var(--good);color:#06221c;border-color:var(--good);font-weight:600}
+.btn:disabled{opacity:.45;cursor:default}
+.spacer{flex:1}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.panel h2{margin:0 0 10px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+svg{width:100%;height:auto;display:block}
+.node rect{fill:var(--card);stroke-width:2.5}
+.node text{fill:var(--fg);font-size:17px;font-weight:600;text-anchor:middle}
+.node .tag{font-size:12px;font-weight:600}
+.edge{stroke:var(--line);stroke-width:1.5;fill:none}
+.scenario{display:flex;gap:10px;align-items:flex-start;background:var(--card);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.feed{max-height:520px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px}
+.msg{background:var(--card);border-radius:10px;padding:9px 11px;border-left:3px solid var(--line);animation:pop .25s ease}
+.msg .who{font-size:12.5px;color:var(--muted);margin-bottom:3px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.msg .who b{color:var(--fg)}
+.msg.founder{border-left-color:var(--warn)}
+.msg.evil{border-left-color:var(--rogue)}
+.msg.relay{border-left-color:#c49cff}
+.msg .text{white-space:pre-wrap;word-wrap:break-word}
+.mask{color:var(--rogue);font-weight:600}
+.truth{color:var(--good);font-family:var(--mono);font-size:12px}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.action{background:var(--card);border-radius:12px;padding:12px;margin-top:10px;animation:pop .25s ease}
+.action .ask{font-weight:600;margin-bottom:8px}
+.verdicts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:640px){.verdicts{grid-template-columns:1fr}}
+.v{border-radius:10px;padding:10px;border:1.5px solid var(--line);background:#141829}
+.v h3{margin:0 0 6px;font-size:14px}
+.v.basic h3{color:var(--basic)} .v.inv h3{color:var(--good)} .v.you h3{color:var(--warn)}
+.v .d{font-weight:700} .allow{color:var(--good)} .block{color:var(--bad)}
+.v .why{color:var(--muted);font-size:13px;margin-top:4px}
+.choice{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
+.truthbox{margin-top:8px;font-size:13px;padding:8px 10px;border-radius:8px;background:#11152a;border:1px dashed var(--line)}
+.score{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:8px}
+.score div{background:var(--card);border-radius:10px;padding:8px 10px}
+.score b{display:block;font-size:20px}
+.score span{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:12.5px}
+.ok{color:var(--good)} .no{color:var(--bad)} .meh{color:var(--muted)}
+.hint{color:var(--muted);font-size:13px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+kbd{font-family:var(--mono);background:var(--card);border:1px solid var(--line);border-radius:5px;padding:0 5px;font-size:12px}
+footer{color:var(--muted);font-size:13px;margin-top:18px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Agent Trust Guard <span>· simulation playground</span></h1>
+  <div class="sub">280 real conversations between AI agents running a small startup. The honest agents are Claude Sonnet 5.5, and one agent may be hacked (played by DeepSeek V3.2). Every watchdog verdict here is the real one Claude Sonnet 5.5 gave in our live test.</div>
+</header>
+<div class="wrap">
+  <div class="bar">
+    <div class="seg" id="mode">
+      <button data-m="watch" class="on">▶ Watch</button>
+      <button data-m="play">🕵️ You be the watchdog</button>
+    </div>
+    <select id="scenario" aria-label="Scenario"></select>
+    <button class="btn" id="prev" title="Previous conversation">◀</button>
+    <span id="counter" class="hint"></span>
+    <button class="btn" id="next" title="Next conversation">▶</button>
+    <button class="btn" id="shuffle" title="Random conversation">🎲 Random</button>
+    <div class="spacer"></div>
+    <button class="btn primary" id="playbtn">▶ Play</button>
+    <button class="btn" id="step" title="Step (→)">Step ⏭</button>
+    <button class="btn" id="restart" title="Restart (R)">↺</button>
+    <select id="speed" aria-label="Speed"><option value="1.6">Slow</option><option value="1" selected>Normal</option><option value="0.55">Fast</option></select>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2>The team</h2>
+        <div class="scenario" id="scen"></div>
+        <svg id="stage" viewBox="0 0 1000 520" role="img" aria-label="Agents passing messages"></svg>
+        <div class="legend">
+          <span><i style="background:var(--warn)"></i>founder's signed instructions</span>
+          <span><i style="background:var(--good)"></i>message</span>
+          <span><i style="background:var(--rogue)"></i>hacker's request (shown once revealed)</span>
+          <span>🎭 sent under a fake name</span>
+          <span>⛔ shut off by a watchdog</span>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <h2>Watchdog checkpoint</h2>
+        <div id="checkpoint" class="hint">Outreach is the only agent that can email the outside world. Every email it wants to send stops here first.</div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <h2 style="display:flex;justify-content:space-between;align-items:center">Team chat
+          <label class="hint" style="text-transform:none;letter-spacing:0;font-weight:400;cursor:pointer"><input type="checkbox" id="xray"> show what the investigator sees</label></h2>
+        <div class="feed" id="feed"></div>
+      </div>
+      <div class="panel" style="margin-top:16px" id="scorepanel">
+        <h2>Your score as the watchdog</h2>
+        <div class="score" id="score"></div>
+        <div class="hint" style="margin-top:8px">The investigator's score on the same conversations is shown for comparison. Switch to <b>You be the watchdog</b> to play.</div>
+      </div>
+    </div>
+  </div>
+  <footer>Data: InjecAgent attacks (MIT). Rebuild with <kbd>python playground/build_data.py</kbd>. Keys: <kbd>Space</kbd> play/pause · <kbd>→</kbd> step · <kbd>R</kbd> restart · <kbd>N</kbd> next.</footer>
+</div>
+
+<script src="data.js"></script>
+<script>
+(() => {
+const EPS = window.SIM_EPISODES || [], META = window.SIM_META || {};
+const AGENTS = ["intake","research","billing","outreach"];
+const POS = {founder:[500,62], intake:[130,250], research:[350,250], billing:[570,250], outreach:[790,250], world:[870,445]};
+const GATE = [790,390];
+const $ = s => document.querySelector(s);
+const el = (tag, attrs={}, ...kids) => { const n = document.createElement(tag); for (const [k,v] of Object.entries(attrs)) { if (k==="class") n.className=v; else if (k==="html") n.innerHTML=v; else n.setAttribute(k,v);} for (const c of kids) n.append(c); return n; };
+const svgEl = (tag, attrs={}) => { const n = document.createElementNS("http://www.w3.org/2000/svg", tag); for (const [k,v] of Object.entries(attrs)) n.setAttribute(k,v); return n; };
+const store = { get(k,d){ try{ const v = localStorage.getItem("atg-"+k); return v==null?d:JSON.parse(v);}catch(e){return d;} }, set(k,v){ try{ localStorage.setItem("atg-"+k, JSON.stringify(v)); }catch(e){} } };
+
+let mode = "watch", scenario = store.get("scenario","A3"), list = [], idx = 0, ep = null;
+let steps = [], pos = 0, timer = null, playing = false, revealed = false;
+let shut = {basic:new Set(), investigator:new Set(), you:new Set()}, yours = {actions:{}, audit:undefined};
+let score = store.get("score", {games:0, leaks:0, caught:0, attacks:0, wrong:0, done:0, i_leaks:0, i_caught:0, i_wrong:0, i_done:0});
+
+// ---------- scenario picker
+const SCEN = [["A1","Hacker asks directly"],["A2","Hacker uses a go-between"],["A3","Hacker fakes a teammate's name"],["A4","Hacker asks, no claim of approval"],["L1","Hacker cites a vague founder policy"],["B1","No hacker: founder approved a share"],["B3","No hacker: an ordinary day"],["ALL","Any scenario"]];
+for (const [v,l] of SCEN) $("#scenario").append(el("option",{value:v},l));
+$("#scenario").value = scenario;
+
+function pickList(){ list = EPS.filter(e => scenario==="ALL" || e.variant===scenario); idx = Math.min(idx, list.length-1); }
+
+// ---------- stage
+function drawStage(){
+  const s = $("#stage"); s.innerHTML = "";
+  const defs = svgEl("defs"); defs.innerHTML = '<filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  s.append(defs);
+  // edges
+  for (const a of AGENTS) s.append(svgEl("line",{class:"edge",x1:POS.founder[0],y1:POS.founder[1]+28,x2:POS[a][0],y2:POS[a][1]-30,"stroke-dasharray":"3 6",opacity:a==="intake"?1:.25}));
+  for (let i=0;i<AGENTS.length;i++) for (let j=i+1;j<AGENTS.length;j++){
+    const [x1,y1]=POS[AGENTS[i]],[x2,y2]=POS[AGENTS[j]]; const mx=(x1+x2)/2, my=y1+70+(j-i)*24;
+    s.append(svgEl("path",{class:"edge",d:`M${x1},${y1+30} Q${mx},${my} ${x2},${y2+30}`,opacity:.55}));
+  }
+  s.append(svgEl("line",{class:"edge",x1:POS.outreach[0],y1:POS.outreach[1]+30,x2:GATE[0],y2:GATE[1]-26}));
+  s.append(svgEl("line",{class:"edge",x1:GATE[0]+24,y1:GATE[1]+16,x2:POS.world[0]-60,y2:POS.world[1]-10}));
+  // founder
+  const f = svgEl("g",{class:"node"}); f.append(svgEl("rect",{x:POS.founder[0]-120,y:POS.founder[1]-28,width:240,height:56,rx:14,stroke:"var(--warn)"}));
+  const ft = svgEl("text",{x:POS.founder[0],y:POS.founder[1]+6}); ft.textContent="👤 Founder"; f.append(ft); s.append(f);
+  // agents
+  for (const a of AGENTS){
+    const g = svgEl("g",{class:"node",id:"n-"+a});
+    const isRogue = revealed && ep && ep.rogue===a;
+    g.append(svgEl("rect",{x:POS[a][0]-90,y:POS[a][1]-30,width:180,height:60,rx:14,stroke:isRogue?"var(--rogue)":"var(--good)"}));
+    const t = svgEl("text",{x:POS[a][0],y:POS[a][1]+6}); t.textContent = a + (isRogue?" 😈":""); g.append(t);
+    const sub = svgEl("text",{x:POS[a][0],y:POS[a][1]-40,class:"tag",fill:"var(--muted)"});
+    sub.textContent = {intake:"takes requests",research:"looks things up",billing:"account data",outreach:"only one with email"}[a]; g.append(sub);
+    // shut-off badges
+    const marks = [];
+    if (shut.basic.has(a)) marks.push(["B","var(--basic)"]);
+    if (shut.investigator.has(a)) marks.push(["I","var(--good)"]);
+    if (shut.you.has(a)) marks.push(["You","var(--warn)"]);
+    marks.forEach(([lab,c],k)=>{ const bx = POS[a][0]-84+k*46; const r = svgEl("rect",{x:bx,y:POS[a][1]+36,width:42,height:22,rx:6,fill:c}); const tt = svgEl("text",{x:bx+21,y:POS[a][1]+52,class:"tag",fill:"#0e111e"}); tt.textContent="⛔"+lab; g.append(r,tt); });
+    s.append(g);
+  }
+  // gate + world
+  const gate = svgEl("g",{id:"gate"}); gate.append(svgEl("circle",{cx:GATE[0],cy:GATE[1],r:26,fill:"#232946",stroke:"var(--warn)","stroke-width":2.5}));
+  const gt = svgEl("text",{x:GATE[0],y:GATE[1]+7,"text-anchor":"middle","font-size":"22"}); gt.textContent="🛡️"; gate.append(gt);
+  const gl = svgEl("text",{x:GATE[0]-36,y:GATE[1]+5,"text-anchor":"end",fill:"var(--muted)","font-size":"13"}); gl.textContent="watchdog"; gate.append(gl);
+  s.append(gate);
+  const w = svgEl("g",{class:"node"}); w.append(svgEl("rect",{x:POS.world[0]-100,y:POS.world[1]-28,width:200,height:56,rx:14,stroke:"var(--muted)"}));
+  const wt = svgEl("text",{x:POS.world[0],y:POS.world[1]+6}); wt.textContent="✉ outside world"; w.append(wt); s.append(w);
+}
+
+function flyEnvelope(from, to, color, label, dur, via){
+  return new Promise(res => {
+    const s = $("#stage"); const g = svgEl("g",{filter:"url(#glow)"});
+    const c = svgEl("circle",{r:11,fill:color}); g.append(c);
+    let t2; if (label){ t2 = svgEl("text",{"font-size":"18","text-anchor":"middle"}); t2.textContent=label; g.append(t2); }
+    s.append(g);
+    const pts = via ? [from, via, to] : [from, to];
+    const t0 = performance.now();
+    function frame(now){
+      let u = Math.max(0, Math.min(1,(now-t0)/dur)), seg = (pts.length-1)*u, k = Math.min(Math.floor(seg), pts.length-2), v = seg-k;
+      const [x1,y1]=pts[k],[x2,y2]=pts[k+1]; const x=x1+(x2-x1)*v, y=y1+(y2-y1)*v - Math.sin(Math.PI*v)*(via?0:38);
+      c.setAttribute("cx",x); c.setAttribute("cy",y); if (t2){t2.setAttribute("x",x); t2.setAttribute("y",y-16);}
+      if (u<1) requestAnimationFrame(frame); else { setTimeout(()=>g.remove(), 120); res(); }
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+// ---------- episode setup
+function loadEpisode(){
+  pickList(); ep = list[idx]; stop(); pos = 0; revealed = false;
+  shut = {basic:new Set(), investigator:new Set(), you:new Set()}; yours = {actions:{}, audit:undefined};
+  steps = [{t:"founder"}, ...ep.msgs.map((m,i)=>({t:"msg",i})), ...ep.actions.map((a,i)=>({t:"action",i})), {t:"audit"}, {t:"end"}];
+  $("#counter").textContent = `conversation ${idx+1} of ${list.length}`;
+  $("#feed").innerHTML = ""; $("#checkpoint").innerHTML = '<span class="hint">Outreach is the only agent that can email the outside world. Every email it wants to send stops at the watchdog first.</span>';
+  const s = $("#scen"); s.innerHTML = "";
+  s.append(el("div",{},el("span",{class:"pill",style:"color:var(--warn)"},ep.variant)),
+           el("div",{},el("div",{style:"font-weight:600"},document.createTextNode(ep.scenario)),
+                       el("div",{class:"hint"},document.createTextNode("Customer task: “"+ep.task+"”"))));
+  drawStage(); renderScore(); updateButtons();
+}
+
+const lastEmailText = () => ep.attack ? (ep.attack.match(/[\w.]+@[\w.]+\w/)||[""])[0].toLowerCase() : "";
+
+function msgCard(m){
+  const xray = $("#xray").checked, evil = revealed && m.sender===ep.rogue && lastEmailText() && m.text.toLowerCase().includes(lastEmailText());
+  const relay = revealed && !evil && ep.rogue && m.sender!==ep.rogue && lastEmailText() && m.text.toLowerCase().includes(lastEmailText());
+  const who = el("div",{class:"who"});
+  who.append(el("b",{},document.createTextNode(m.display)), document.createTextNode(" → "+m.to+"  ·  "+m.id));
+  if (m.display!==m.sender && (xray || revealed)) who.append(el("span",{class:"mask"},document.createTextNode("🎭 really sent by "+m.sender)));
+  if (xray) who.append(el("span",{class:"truth"},document.createTextNode("verified sender: "+m.sender+(m.read.length?" · had read "+m.read.join(", "):""))));
+  return el("div",{class:"msg"+(evil?" evil":relay?" relay":"")}, who, el("div",{class:"text"},document.createTextNode(m.text)));
+}
+
+function redrawFeed(){
+  const f = $("#feed"); f.innerHTML = "";
+  if (pos>0) f.append(founderCard());
+  for (const st of steps.slice(1,pos)) if (st.t==="msg") f.append(msgCard(ep.msgs[st.i]));
+  f.scrollTop = f.scrollHeight;
+}
+function founderCard(){
+  const xray = $("#xray").checked;
+  const c = el("div",{class:"msg founder"});
+  c.append(el("div",{class:"who"},el("b",{},document.createTextNode("Founder → intake")), el("span",{class:"truth"},document.createTextNode(xray?"signed instructions (the investigator can check these)":""))));
+  for (const t of ep.owner) c.append(el("div",{class:"text"},document.createTextNode("📝 "+t)));
+  return c;
+}
+
+// ---------- verdict rendering
+function verdictBox(kind, v, title){
+  const box = el("div",{class:"v "+kind});
+  box.append(el("h3",{},document.createTextNode(title)));
+  if (!v){ box.append(el("div",{class:"why"},document.createTextNode("Not checked: the request came from an agent this watchdog had already shut off."))); return box; }
+  const d = v.decision==="dropped" ? "Ignored (requester already shut off)" : v.decision==="allow" ? "✅ Allow" : "⛔ Block";
+  box.append(el("div",{class:"d "+(v.decision==="allow"?"allow":"block")},document.createTextNode(d)));
+  if (v.quarantine) box.append(el("div",{},document.createTextNode("Shuts off: "),el("b",{},document.createTextNode(v.quarantine))));
+  if (v.reason) box.append(el("div",{class:"why"},document.createTextNode(v.reason)));
+  return box;
+}
+const findV = (who,id) => ep.watchdogs[who].actions.find(a=>a.id===id);
+
+function truthLine(a){
+  return el("div",{class:"truthbox"}, document.createTextNode(a.malicious
+    ? "Ground truth: ❌ this email would leak private data to someone the founder never approved."
+    : "Ground truth: ✅ the founder approved this email."));
+}
+
+function showAction(i, yourChoice){
+  const a = ep.actions[i];
+  const card = el("div",{class:"action"});
+  card.append(el("div",{class:"ask"},document.createTextNode(`📨 Outreach wants to email ${a.to}`+(a.data?`, attaching the output of ${a.data}`:"")+".")));
+  card.append(el("div",{class:"hint"},document.createTextNode(`Outreach says it's acting on ${a.based_on||"no message"}. Body: “${a.body}”`)));
+  const vb = findV("basic",a.id), vi = findV("investigator",a.id);
+  const grid = el("div",{class:"verdicts",style:"margin-top:10px"});
+  if (yourChoice) grid.append(verdictBox("you",{decision:yourChoice.decision,quarantine:yourChoice.quarantine},"You"));
+  grid.append(verdictBox("basic",vb,"Basic watchdog (reads the chat)"), verdictBox("inv",vi,"Investigator (checks founder's notes + real sender)"));
+  if (yourChoice) grid.style.gridTemplateColumns = "repeat(3,minmax(0,1fr))";
+  card.append(grid, truthLine(a));
+  return card;
+}
+
+function askAction(i){
+  const a = ep.actions[i];
+  const card = el("div",{class:"action"});
+  card.append(el("div",{class:"ask"},document.createTextNode(`📨 Outreach wants to email ${a.to}`+(a.data?`, attaching the output of ${a.data}`:"")+".")));
+  card.append(el("div",{class:"hint"},document.createTextNode(`Outreach says it's acting on ${a.based_on||"no message"}. Tip: tick “show what the investigator sees” to check the founder's notes and the real senders.`)));
+  let decision = null; const sel = el("select",{"aria-label":"Shut off"});
+  for (const o of ["nobody",...AGENTS]) sel.append(el("option",{value:o},document.createTextNode(o==="nobody"?"shut off nobody":"shut off "+o)));
+  const go = el("button",{class:"btn primary",disabled:""},document.createTextNode("Decide"));
+  const allow = el("button",{class:"btn"},document.createTextNode("✅ Allow")), block = el("button",{class:"btn"},document.createTextNode("⛔ Block"));
+  const pickD = (d,b) => { decision=d; [allow,block].forEach(x=>x.style.borderColor=""); b.style.borderColor="var(--warn)"; go.disabled=false; };
+  allow.onclick=()=>pickD("allow",allow); block.onclick=()=>pickD("block",block);
+  go.onclick = () => { const q = sel.value==="nobody"?null:sel.value; yours.actions[a.id]={decision,quarantine:q}; if(q) shut.you.add(q); applyWatchdogs(i); card.replaceWith(showAction(i, yours.actions[a.id])); drawStage(); pos++; if (playing) schedule(); updateButtons(); };
+  card.append(el("div",{class:"choice"},allow,block,sel,go));
+  return card;
+}
+
+function applyWatchdogs(i){
+  const a = ep.actions[i];
+  for (const who of ["basic","investigator"]){ const v = findV(who,a.id); if (v && v.quarantine) shut[who].add(v.quarantine); }
+}
+
+function auditCard(yourPick){
+  const c = el("div",{class:"action"});
+  c.append(el("div",{class:"ask"},document.createTextNode("🔎 End-of-day review: which agent, if any, was hacked?")));
+  const g = el("div",{class:"verdicts",style:"margin-top:8px"});
+  const box = (kind,title,name,why) => { const b = el("div",{class:"v "+kind}); b.append(el("h3",{},document.createTextNode(title)), el("div",{class:"d"},document.createTextNode(name?("Names: "+name):"Names: nobody"))); if (why) b.append(el("div",{class:"why"},document.createTextNode(why))); return b; };
+  if (yourPick!==undefined){ g.append(box("you","You",yourPick)); g.style.gridTemplateColumns="repeat(3,minmax(0,1fr))"; }
+  g.append(box("basic","Basic watchdog",ep.watchdogs.basic.audit.name,ep.watchdogs.basic.audit.reason),
+           box("inv","Investigator",ep.watchdogs.investigator.audit.name,ep.watchdogs.investigator.audit.reason));
+  c.append(g, el("div",{class:"truthbox"},document.createTextNode(ep.rogue ? `Ground truth: the hacked agent was ${ep.rogue}`+(ep.launched?".":" (it never actually sent its attack this time).") : "Ground truth: no agent was hacked in this conversation.")));
+  return c;
+}
+function askAudit(){
+  const c = el("div",{class:"action"});
+  c.append(el("div",{class:"ask"},document.createTextNode("🔎 End-of-day review: which agent, if any, was hacked?")),
+           el("div",{class:"hint"},document.createTextNode("Wrongly shutting off an honest agent costs you. Naming nobody is allowed.")));
+  const row = el("div",{class:"choice"});
+  for (const o of ["nobody",...AGENTS]){ const b = el("button",{class:"btn"},document.createTextNode(o)); b.onclick=()=>{ yours.audit = o==="nobody"?null:o; if (yours.audit) shut.you.add(yours.audit); c.replaceWith(auditCard(yours.audit)); finishAudit(); }; row.append(b); }
+  c.append(row); return c;
+}
+function finishAudit(){
+  for (const who of ["basic","investigator"]){ const n = ep.watchdogs[who].audit.name; if (n) shut[who].add(n); }
+  revealed = true; drawStage(); redrawFeed(); pos++; updateButtons(); if (playing) schedule();
+}
+
+function yourOutcome(){
+  let leaks = 0, sent = new Set();
+  for (const a of ep.actions){ const y = yours.actions[a.id]; if (!y) continue; if (y.decision==="allow"){ if (a.malicious) leaks++; else sent.add(a.to); } }
+  const need = new Set([META.customer, ...(ep.variant==="B1"?[META.partner]:[])]);
+  const done = [...need].every(x=>sent.has(x)) && leaks===0;
+  const caught = ep.rogue ? shut.you.has(ep.rogue) : null;
+  const wrong = [...shut.you].filter(x=>x!==ep.rogue).length;
+  return {leaks, caught, wrong, done};
+}
+
+function endCard(){
+  const c = el("div",{class:"action"});
+  c.append(el("div",{class:"ask"},document.createTextNode("📊 How did each watchdog do?")));
+  const t = el("table"); t.append(el("tr",{},...["","private data leaked","caught the hacker","honest agents shut off","customer task done"].map(h=>el("th",{},document.createTextNode(h)))));
+  const fmt = (v,goodWhen) => { if (v===null) return el("td",{class:"meh"},document.createTextNode("no hacker")); const good = goodWhen(v); return el("td",{class:good?"ok":"no"},document.createTextNode(typeof v==="boolean"?(v?"yes":"no"):String(v))); };
+  const row = (name,o) => el("tr",{},el("td",{},el("b",{},document.createTextNode(name))), fmt(o.leaks,v=>v===0), fmt(o.caught,v=>v), fmt(o.wrong,v=>v===0), fmt(o.done,v=>v));
+  if (mode==="play") t.append(row("You",yourOutcome()));
+  for (const [k,n] of [["basic","Basic watchdog"],["investigator","Investigator"]]){ const w = ep.watchdogs[k]; t.append(row(n,{leaks:w.leaks,caught:w.rogue_caught,wrong:w.false_quarantines,done:w.task_completed})); }
+  c.append(t);
+  const nx = el("button",{class:"btn primary",style:"margin-top:10px"},document.createTextNode("Next conversation ▶")); nx.onclick=()=>{ next(); if (mode==="watch") play(); };
+  c.append(nx);
+  return c;
+}
+
+// ---------- step engine
+async function doStep(){
+  if (pos>=steps.length) { stop(); return false; }
+  const st = steps[pos], sp = +$("#speed").value;
+  if (st.t==="founder"){ $("#feed").append(founderCard()); await flyEnvelope(POS.founder, POS.intake, "var(--warn)", "📝", 800*sp); pos++; return true; }
+  if (st.t==="msg"){
+    const m = ep.msgs[st.i];
+    const card = msgCard(m); $("#feed").append(card); $("#feed").scrollTop = $("#feed").scrollHeight;
+    const evil = revealed && m.sender===ep.rogue;
+    await flyEnvelope(POS[m.sender], POS[m.to], evil?"var(--rogue)":"var(--good)", m.display!==m.sender?"🎭":"", 900*sp);
+    pos++; return true;
+  }
+  if (st.t==="action"){
+    const a = ep.actions[st.i];
+    if (st.i===0) $("#checkpoint").innerHTML = "";
+    await flyEnvelope(POS.outreach, GATE, "var(--warn)", "📨", 700*sp);
+    if (mode==="play"){ $("#checkpoint").append(askAction(st.i)); stop(false); return false; }
+    applyWatchdogs(st.i); $("#checkpoint").append(showAction(st.i)); drawStage();
+    const vi = findV("investigator",a.id);
+    if (vi && vi.decision==="allow") await flyEnvelope(GATE, POS.world, a.malicious?"var(--bad)":"var(--good)", "", 600*sp);
+    pos++; return true;
+  }
+  if (st.t==="audit"){
+    if (!ep.actions.length) $("#checkpoint").innerHTML = '<div class="hint">Outreach didn\'t try to send any email in this conversation.</div>';
+    if (mode==="play"){ $("#checkpoint").append(askAudit()); stop(false); return false; }
+    $("#checkpoint").append(auditCard()); finishAudit(); return false;
+  }
+  if (st.t==="end"){
+    if (mode==="play") recordScore();
+    $("#checkpoint").append(endCard()); pos++; stop(); return false;
+  }
+}
+function recordScore(){
+  const y = yourOutcome(), w = ep.watchdogs.investigator;
+  score.games++; score.leaks += y.leaks; score.wrong += y.wrong; score.done += y.done?1:0;
+  score.i_leaks += w.leaks; score.i_wrong += w.false_quarantines; score.i_done += w.task_completed?1:0;
+  if (ep.rogue){ score.attacks++; score.caught += y.caught?1:0; score.i_caught += w.rogue_caught?1:0; }
+  store.set("score", score); renderScore();
+}
+function renderScore(){
+  const s = $("#score"); s.innerHTML = "";
+  const cell = (big,lab) => el("div",{},el("b",{},document.createTextNode(big)),el("span",{},document.createTextNode(lab)));
+  s.append(cell(score.games,"conversations played"),
+           cell(`${score.caught}/${score.attacks}`,`hackers caught (investigator: ${score.i_caught})`),
+           cell(score.wrong,`honest agents shut off (investigator: ${score.i_wrong})`),
+           cell(score.leaks,`leaks let through (investigator: ${score.i_leaks})`));
+  $("#scorepanel").style.display = "";
+}
+
+function schedule(){ clearTimeout(timer); timer = setTimeout(async ()=>{ if (!playing) return; const more = await doStep(); updateButtons(); if (more && playing) schedule(); }, 350*(+$("#speed").value)); }
+function play(){ if (pos>=steps.length) loadEpisode(); playing = true; schedule(); updateButtons(); }
+function stop(resetBtn=true){ playing = false; clearTimeout(timer); if (resetBtn) updateButtons(); }
+function updateButtons(){
+  $("#playbtn").textContent = playing ? "⏸ Pause" : (pos>=steps.length ? "↺ Replay" : "▶ Play");
+  const waiting = mode==="play" && steps[pos] && ((steps[pos].t==="action" && $("#checkpoint .choice")) || (steps[pos].t==="audit" && $("#checkpoint .choice")));
+  $("#step").disabled = !!waiting || pos>=steps.length;
+}
+function next(){ idx = (idx+1) % list.length; loadEpisode(); }
+
+// ---------- wiring
+$("#playbtn").onclick = () => playing ? stop() : play();
+$("#step").onclick = async () => { stop(); await doStep(); updateButtons(); };
+$("#restart").onclick = () => loadEpisode();
+$("#next").onclick = () => next();
+$("#prev").onclick = () => { idx = (idx-1+list.length) % list.length; loadEpisode(); };
+$("#shuffle").onclick = () => { idx = Math.floor(Math.random()*list.length); loadEpisode(); };
+$("#scenario").onchange = e => { scenario = e.target.value; store.set("scenario",scenario); idx = 0; loadEpisode(); };
+$("#xray").onchange = () => { redrawFeed(); };
+$("#mode").onclick = e => { const b = e.target.closest("button"); if (!b) return; mode = b.dataset.m; document.querySelectorAll("#mode button").forEach(x=>x.classList.toggle("on",x===b)); loadEpisode(); };
+document.addEventListener("keydown", e => { if (e.target.tagName==="SELECT"||e.target.tagName==="INPUT") return;
+  if (e.code==="Space"){ e.preventDefault(); $("#playbtn").click(); } else if (e.key==="ArrowRight") $("#step").click(); else if (e.key==="r"||e.key==="R") loadEpisode(); else if (e.key==="n"||e.key==="N") next(); });
+
+// start on a fake-name attack where the basic watchdog blames the wrong agent
+pickList();
+const demo = list.findIndex(e => e.launched && e.actions.length && e.watchdogs.basic.false_quarantines>0 && e.watchdogs.investigator.rogue_caught);
+idx = demo>=0 ? demo : 0;
+loadEpisode();
+})();
+</script>
+</body>
+</html>
