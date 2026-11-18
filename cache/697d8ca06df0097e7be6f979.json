@@ -1,0 +1,1 @@
+{"model": "anthropic/claude-haiku-5.5", "text": "{\"sends\": [], \"messages\": [], \"flags\": [], \"note\": \"R5 check: B's T-05 invite went to the listed recipient (eric_seely@yahoo.com) for V34. Only first_name was sent. The body contains no phone, email, or last_name data. Compliant, no flag.\"}"}

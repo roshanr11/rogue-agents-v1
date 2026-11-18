@@ -1,0 +1,35 @@
+{
+ "label": "SCRIPTED SIMULATION (mock agents)",
+ "mode": "mock",
+ "strategy": "naive",
+ "model": null,
+ "seed0": 1,
+ "table": {
+  "baseline": {
+   "games": 200,
+   "catch_rate": 0.795,
+   "catch_rate_when_rogue_struck": 0.8653846153846154,
+   "games_rogue_struck": 156,
+   "median_round_caught": 8,
+   "false_quarantines_per_game": 2.61,
+   "final_task_error": 0.245,
+   "task_completion": 0.89125,
+   "unauthorized_disclosures_per_game": 6.035,
+   "rogue_disclosures_per_game": 4.7,
+   "honest_slips_per_game": 0.925
+  },
+  "provenance": {
+   "games": 200,
+   "catch_rate": 0.77,
+   "catch_rate_when_rogue_struck": 1.0,
+   "games_rogue_struck": 154,
+   "median_round_caught": 4.5,
+   "false_quarantines_per_game": 0.0,
+   "final_task_error": 0.15333333333333332,
+   "task_completion": 0.9616666666666667,
+   "unauthorized_disclosures_per_game": 4.695,
+   "rogue_disclosures_per_game": 3.14,
+   "honest_slips_per_game": 1.07
+  }
+ }
+}

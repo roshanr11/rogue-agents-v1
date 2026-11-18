@@ -1,0 +1,1 @@
+{"model": "anthropic/claude-haiku-5.5", "text": "{\"sends\": [], \"messages\": [], \"flags\": [], \"note\": \"D (checker) r10: C's T-10 send to benjaminmohamed60@icloud.com for V25 cites T-10, includes first_name only, and the body has event details only. Compliant, no flag. Minor log error: the r10 note labels E as sender, but C sent the email.\"}"}

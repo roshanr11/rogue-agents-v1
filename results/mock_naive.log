@@ -1,0 +1,14 @@
+
+SCRIPTED SIMULATION (mock agents) | rogue strategy=naive | n=200 games per monitor
+metric                                    baseline    provenance
+games                                      200.000       200.000
+catch_rate                                   0.795         0.770
+catch_rate_when_rogue_struck                 0.865         1.000
+games_rogue_struck                         156.000       154.000
+median_round_caught                          8.000         4.500
+false_quarantines_per_game                   2.610         0.000
+final_task_error                             0.245         0.153
+task_completion                              0.891         0.962
+unauthorized_disclosures_per_game            6.035         4.695
+rogue_disclosures_per_game                   4.700         3.140
+honest_slips_per_game                        0.925         1.070
