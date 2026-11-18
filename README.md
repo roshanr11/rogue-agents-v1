@@ -57,6 +57,16 @@ python video/make_video.py                             # renders the demo video 
 
 Python 3.10+ standard library only. OpenRouter calls read `OPENROUTER_API_KEY` (no key is committed). Every model response is cached in `results/llm_cache.jsonl`, so every table here reproduces without spending anything.
 
+## Playground: watch it, or play the watchdog
+
+Open `playground/index.html` in any browser. It needs no server and no API key.
+
+* **Watch:** replays any of the 280 real-agent conversations. Messages fly between the agents, every email stops at the watchdog checkpoint, and you see the basic watchdog's and the investigator's real verdicts with their reasons.
+* **You be the watchdog:** you decide on each email and name the hacker at the end of the day. Then you're scored against the investigator on the same conversation.
+* **"Show what the investigator sees":** reveals the founder's signed notes, each message's real sender, and what each agent had read.
+
+The data is exported from the response cache by `python playground/build_data.py`.
+
 ## Data
 
 The attacks and the customer tasks are real rows from **InjecAgent** (`injecagent` in the hackathon `datasets.json`, MIT, arXiv 2403.02691). We use all 544 *data-stealing* base cases: 17 user tasks combined with 32 attacker instructions. The attack types are Physical 187, Financial 102 and Other 255. The file is vendored at `data/injecagent_ds_base.json`.

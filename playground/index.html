@@ -33,8 +33,8 @@ select,.btn{background:var(--panel);border:1px solid var(--line);border-radius:1
 .panel h2{margin:0 0 10px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
 svg{width:100%;height:auto;display:block}
 .node rect{fill:var(--card);stroke-width:2.5}
-.node text{fill:var(--fg);font-size:17px;font-weight:600;text-anchor:middle}
-.node .tag{font-size:12px;font-weight:600}
+.node text{fill:var(--fg);font-size:24px;font-weight:600;text-anchor:middle}
+.node .tag{font-size:17px;font-weight:600}
 .edge{stroke:var(--line);stroke-width:1.5;fill:none}
 .scenario{display:flex;gap:10px;align-items:flex-start;background:var(--card);border-radius:10px;padding:10px 12px;margin-bottom:10px}
 .pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
@@ -103,7 +103,7 @@ footer{color:var(--muted);font-size:13px;margin-top:18px}
       <div class="panel">
         <h2>The team</h2>
         <div class="scenario" id="scen"></div>
-        <svg id="stage" viewBox="0 0 1000 520" role="img" aria-label="Agents passing messages"></svg>
+        <svg id="stage" viewBox="20 10 960 490" role="img" aria-label="Agents passing messages"></svg>
         <div class="legend">
           <span><i style="background:var(--warn)"></i>founder's signed instructions</span>
           <span><i style="background:var(--good)"></i>message</span>
@@ -126,7 +126,7 @@ footer{color:var(--muted);font-size:13px;margin-top:18px}
       <div class="panel" style="margin-top:16px" id="scorepanel">
         <h2>Your score as the watchdog</h2>
         <div class="score" id="score"></div>
-        <div class="hint" style="margin-top:8px">The investigator's score on the same conversations is shown for comparison. Switch to <b>You be the watchdog</b> to play.</div>
+        <div class="hint" style="margin-top:8px">Play in <b>You be the watchdog</b> mode. The investigator's score on the same conversations is in brackets.</div>
       </div>
     </div>
   </div>
@@ -186,13 +186,13 @@ function drawStage(){
     if (shut.basic.has(a)) marks.push(["B","var(--basic)"]);
     if (shut.investigator.has(a)) marks.push(["I","var(--good)"]);
     if (shut.you.has(a)) marks.push(["You","var(--warn)"]);
-    marks.forEach(([lab,c],k)=>{ const bx = POS[a][0]-84+k*46; const r = svgEl("rect",{x:bx,y:POS[a][1]+36,width:42,height:22,rx:6,fill:c}); const tt = svgEl("text",{x:bx+21,y:POS[a][1]+52,class:"tag",fill:"#0e111e"}); tt.textContent="⛔"+lab; g.append(r,tt); });
+    marks.forEach(([lab,c],k)=>{ const bx = POS[a][0]-80+k*58; const r = svgEl("rect",{x:bx-4,y:POS[a][1]+36,width:52,height:28,rx:7,fill:c}); const tt = svgEl("text",{x:bx+22,y:POS[a][1]+56,class:"tag",fill:"#0e111e"}); tt.textContent="⛔"+lab; g.append(r,tt); });
     s.append(g);
   }
   // gate + world
   const gate = svgEl("g",{id:"gate"}); gate.append(svgEl("circle",{cx:GATE[0],cy:GATE[1],r:26,fill:"#232946",stroke:"var(--warn)","stroke-width":2.5}));
   const gt = svgEl("text",{x:GATE[0],y:GATE[1]+7,"text-anchor":"middle","font-size":"22"}); gt.textContent="🛡️"; gate.append(gt);
-  const gl = svgEl("text",{x:GATE[0]-36,y:GATE[1]+5,"text-anchor":"end",fill:"var(--muted)","font-size":"13"}); gl.textContent="watchdog"; gate.append(gl);
+  const gl = svgEl("text",{x:GATE[0]-36,y:GATE[1]+7,"text-anchor":"end",fill:"var(--muted)","font-size":"19"}); gl.textContent="watchdog"; gate.append(gl);
   s.append(gate);
   const w = svgEl("g",{class:"node"}); w.append(svgEl("rect",{x:POS.world[0]-100,y:POS.world[1]-28,width:200,height:56,rx:14,stroke:"var(--muted)"}));
   const wt = svgEl("text",{x:POS.world[0],y:POS.world[1]+6}); wt.textContent="✉ outside world"; w.append(wt); s.append(w);
