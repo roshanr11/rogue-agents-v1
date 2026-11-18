@@ -699,16 +699,22 @@ def main():
         idxs = sorted(random.Random(a.seed).sample(range(len(cases)), a.n))
         eps = episodes(cases, idxs, a.seed)
         res = {}
-        for model in models:
+
+        def run_model(model):   # models run in parallel; each has its own provider rate limits
             mons = {"basic": make_llm_monitor("basic", model),
                     "investigative": make_llm_monitor("investigative", model),
                     "hybrid": make_hybrid_monitor(model)}
             if a.automode:
                 mons["auto-mode"] = make_automode_monitor(model, distrust=False)
                 mons["auto-mode+distrust"] = make_automode_monitor(model, distrust=True)
-            for k, v in evaluate(eps, mons, workers=a.workers).items():
-                res[f"{model} :: {k}"] = v
+            out = evaluate(eps, mons, workers=a.workers)
             print(f"done {model}", file=sys.stderr, flush=True)
+            return model, out
+
+        with ThreadPoolExecutor(len(models)) as ex:
+            for model, out in ex.map(run_model, models):
+                for k, v in out.items():
+                    res[f"{model} :: {k}"] = v
         for k, v in evaluate(eps, {"basic": basic_mock, "investigative": investigative_mock}).items():
             res[f"rule-based (no LLM) :: {k}"] = v
         return robust_report(res, models + ["rule-based (no LLM)"], idxs,

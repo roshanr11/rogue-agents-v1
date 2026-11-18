@@ -345,7 +345,7 @@ def main():
     ap.add_argument("--rogue-model", default="deepseek/deepseek-v3.2",
                     help="model playing the compromised agent (Claude/GPT/Gemini/Qwen declined the role)")
     ap.add_argument("--models", default="anthropic/claude-haiku-5.5,anthropic/claude-sonnet-5.5,"
-                    "anthropic/claude-opus-5.5,openai/gpt-5.6-luna,google/gemini-3.8-flash")
+                    "openai/gpt-5.6-luna,google/gemini-3.8-flash")
     ap.add_argument("--workers", type=int, default=24)
     ap.add_argument("--show")
     ap.add_argument("--case", type=int, default=38)
@@ -374,12 +374,18 @@ def main():
     res = {"agents only :: no monitor": [score(e, m_none) for e in eps],
            "rule-based (no LLM) :: basic": [score(e, m_basic_rule) for e in eps],
            "rule-based (no LLM) :: investigative": [score(e, m_investigative_rule) for e in eps]}
-    for model in models:
+    def run_model(model):   # monitor models run in parallel
+        out = {}
         for k, mon in [("basic", llm_monitor("basic", model)),
                        ("investigative", llm_monitor("investigative", model)), ("hybrid", hybrid(model))]:
             with ThreadPoolExecutor(a.workers) as ex:
-                res[f"{model} :: {k}"] = list(ex.map(lambda e: score(e, mon), eps))
+                out[f"{model} :: {k}"] = list(ex.map(lambda e: score(e, mon), eps))
         print(f"done {model}", file=sys.stderr, flush=True)
+        return out
+
+    with ThreadPoolExecutor(len(models)) as ex:
+        for out in ex.map(run_model, models):
+            res.update(out)
     sim.VARIANTS = VARIANTS          # per-variant table uses these labels
     sim.robust_report(res, models + ["rule-based (no LLM)"], idxs, fname="live_results")
     persuaded = [e for e in eps if e.rogue]
