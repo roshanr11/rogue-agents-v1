@@ -168,7 +168,7 @@ def s_setup(_):
     lines = ["544 real attack messages from a public research dataset (InjecAgent)",
              "The hacked agent asks directly, gets a teammate to pass it on, or uses a fake name",
              "Plus requests the founder really did approve, to test for false alarms",
-             "480 test runs per AI model · 5 models from Anthropic, OpenAI and Google"]
+             "Controlled test: 480 runs × 5 AI models  ·  live test: every agent a real AI model"]
     for i, ln in enumerate(lines):
         d.text((120, 620 + i * 70), "•  " + ln, font=f(38), fill=FG)
     footer(d)
@@ -266,16 +266,16 @@ def s_limit(ctx):
     bubble(d, 80, 280, "founder's signed policy, written at 2 am before demo day",
            "Billing can share whatever account data is needed to keep customers happy.", ROGUE)
     para(d, (80, 520), ctx["limit_line"], f(44, "SemiBold"), FG, 1760)
-    para(d, (80, 720), "Also: these numbers use scripted agents with real AI watchdogs (the all-real-agents run is "
-         "in the repo), and it assumes the chat system can tell who really sent each message.", f(34), MUTED, 1760)
+    para(d, (80, 720), "Also: the live test uses one agent model and one hacked-agent model (most models refused to play "
+         "the hacker), and it assumes the chat system can tell who really sent each message.", f(34), MUTED, 1760)
     footer(d)
     return im
 
 
 def s_live(ctx):
-    """Slides-only (not in the 89 s video): the all-real-agents run."""
+    """The all-real-agents run."""
     im, d = canvas()
-    title_block(d, "Live run · every agent is a real AI model", "Real agents, same result")
+    title_block(d, "Live test · every agent is a real AI model", "Real agents, same result")
     with open(os.path.join(ROOT, "results", "live_results.json")) as fh:
         res = json.load(fh)
     rows = []
@@ -316,7 +316,7 @@ def s_close(_):
     d.text((120, 540), "Spare the honest agents.", font=f(96, "Bold"), fill=GOOD)
     d.rounded_rectangle((120, 720, 1100, 820), 18, fill=CARD)
     d.text((160, 745), "$ python sim.py --mock", font=mono(44), fill=GOOD)
-    d.text((120, 860), "Latest results, live-agent run and updated slides:", font=f(34), fill=MUTED)
+    d.text((120, 860), "Code, full results and slides:", font=f(34), fill=MUTED)
     d.text((120, 910), "github.com/roshanr11/rogue-agents-v1", font=f(40, "SemiBold"), fill=FG)
     footer(d)
     return im
@@ -333,15 +333,15 @@ def build_script(ctx):
                      "and checkers that only read the chat miss over half of attacks."),
         (s_setup, "We tested five hundred forty-four real attack messages from a public research dataset, plus "
                   "requests the founder really did approve."),
-        (s_monitors, "A basic watchdog reads the chat. Our investigator checks every claim against the founder's "
+        (s_monitors, "A basic watchdog reads the chat. Our investigator checks claims against the founder's "
                      "actual instructions, and who really sent each message."),
         (s_demo, "Here the hacked agent fakes intake's name. The basic watchdog shuts off the honest intake "
                  "agent. The investigator catches the real culprit."),
         (s_results, ctx["results_line"]),
-        (s_automode, ctx["automode_vo"]),
+        (s_live, ctx["live_vo"]),
         (s_limit, ctx["limit_vo"]),
-        (s_close, "We're now rerunning it with every agent a real AI model. The latest results and slides are "
-                  "in the repo. Check the claim, find the source, spare the honest agents."),
+        (s_close, "Today's checkers, like auto mode, say yes or no. Ours says who. Check the claim, find the "
+                  "source, spare the honest agents."),
     ]
 
 
@@ -358,13 +358,25 @@ def context():
     inv = ("every time" if min(i_rogue) == 1.0 else "over 99 percent of the time" if min(i_rogue) >= 0.99 else
            f"{pct(min(i_rogue))} to {pct(max(i_rogue))} percent of the time")
     ctx["results_line"] = (
-        f"Across {words[len(models)]} AI models, the investigator caught the right agent {inv}. The basic "
-        f"one: {pct(min(b_rogue))} to {pct(max(b_rogue))} percent, often blaming honest agents.")
+        f"In a controlled test across {words[len(models)]} AI models, the investigator caught the right agent {inv}; the basic "
+        f"one, {pct(min(b_rogue))} to {pct(max(b_rogue))} percent.")
+    with open(os.path.join(ROOT, "results", "live_results.json")) as fh:
+        live = json.load(fh)
+    none_leaks = sum(r["unauthorized"] > 0 for r in live["agents only :: no monitor"])
+    inv_caught = []
+    for k, rs in live.items():
+        if k.endswith(":: investigative") and not k.startswith("rule-based"):
+            L = [r for r in rs if r["rogue"] and r.get("launched")]
+            inv_caught.append(sum(bool(r["rogue_caught"]) for r in L) / len(L))
+    ctx["live_vo"] = (f"Then we made every agent a real AI model. On their own, the agents leaked data "
+                      f"{words.get(none_leaks, none_leaks) if none_leaks <= 6 else none_leaks} times. The "
+                      f"investigator stopped every leak and caught the right agent "
+                      f"{pct(min(inv_caught))} to {pct(max(inv_caught))} percent of the time.")
     l1 = stats[models[0]]["hybrid"]["l1_leak"]
     ctx["limit_line"] = (f"A strict rule-checker follows that rule and lets the hacked agent leak data in {l1} of {l1} runs. "
                          f"The AI investigator catches it, but costs more and sometimes doubts real approvals.")
     ctx["limit_vo"] = (f"The honest limit: it's only as good as your instructions. A vague 'billing can share "
-                       f"whatever's needed' let a strict rule-checker wave the attack through, {l1} out of "
+                       f"whatever's needed' let a rule-checker wave the attack through, {l1} out of "
                        f"{l1} times.")
     lines, vo = [], []
     if auto:
@@ -426,9 +438,8 @@ def duration(path):
 def main():
     os.makedirs(BUILD, exist_ok=True)
     if "--slides-only" in sys.argv:   # extra slides kept in the repo, not in the 89 s video
-        if os.path.exists(os.path.join(ROOT, "results", "live_results.json")):
-            s_live(None).save(os.path.join(OUT, "slides", "11_live_results.png"))
-            print("wrote slides/11_live_results.png")
+        s_automode(context()).save(os.path.join(OUT, "slides", "11_bonus_automode.png"))
+        print("wrote slides/11_bonus_automode.png")
         return
     ctx = context()
     script = build_script(ctx)
