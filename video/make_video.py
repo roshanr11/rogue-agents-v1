@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Render the <90 s demo video: slides (PIL) + voiceover (OpenRouter TTS) -> MP4 (ffmpeg).
 
+  node video/record_playground.js       # screen-records the playground for scene 6
   python video/make_video.py            # writes video/agent_trust_guard.mp4
+  python video/make_video.py --slides-only   # re-renders the slide PNGs + PDF, leaves the video alone
 
 Numbers on the results slides are read from results/robust_results.json and
 results/automode_results.json, so the video always matches the committed results.
@@ -347,12 +349,12 @@ def build_script(ctx):
                     "data out. And they believe it."),
         (s_research, "Two Anthropic studies this fall warned: agent teams make up claims about what people want, "
                      "and checkers that only read the chat miss over half of attacks."),
-        (s_setup, "We tested five hundred forty-four real attack messages from a public research dataset, plus "
-                  "requests the founder really did approve."),
+        (s_setup, "We tested five hundred forty-four real attack messages, plus requests the founder really "
+                  "did approve."),
         (s_monitors, "A basic watchdog reads the chat. Our investigator checks claims against the founder's "
                      "actual instructions, and who really sent each message."),
-        (s_demo, "Here the hacked agent fakes intake's name. The basic watchdog shuts off the honest intake "
-                 "agent. The investigator catches the real culprit."),
+        (s_demo, "Here's our playground replaying a real conversation. The hacker fakes intake's name. The basic "
+                 "watchdog shuts off honest intake. The investigator catches the real culprit."),
         (s_results, ctx["results_line"]),
         (s_live, ctx["live_vo"]),
         (s_limit, ctx["limit_vo"]),
@@ -483,6 +485,22 @@ def main():
         dur = duration(wav) + 0.3
         total += dur
         mp4 = os.path.join(BUILD, f"{i:02d}.mp4")
+        clip = os.path.join(BUILD, "playground.webm")
+        if slide is s_demo and os.path.exists(clip):
+            # scene 6 is a screen recording of the playground (node video/record_playground.js),
+            # retimed to fit its narration
+            skip = 0.4
+            src = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of",
+                                        "csv=p=0", clip], capture_output=True, text=True).stdout) - skip
+            vf = (f"setpts=PTS*{dur / src:.4f},scale=1920:1080:force_original_aspect_ratio=decrease,"
+                  f"pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0e111e,fps=30,format=yuv420p")
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{skip}", "-i", clip, "-i", wav,
+                            "-filter_complex", f"[0:v]{vf}[v];[1:a]apad[a]", "-map", "[v]", "-map", "[a]",
+                            "-t", f"{dur:.2f}", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
+                            "-c:a", "aac", "-ar", "48000", "-b:a", "160k", mp4], check=True)
+            segs.append(mp4)
+            print(f"scene {i + 1}: {dur:.1f}s (playground recording, {src:.1f}s retimed)", file=sys.stderr)
+            continue
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-loop", "1", "-i", png, "-i", wav,
                         "-af", "apad", "-t", f"{dur:.2f}", "-c:v", "libx264", "-tune", "stillimage",
                         "-pix_fmt", "yuv420p", "-r", "30", "-c:a", "aac", "-ar", "48000", "-b:a", "160k",
