@@ -10,7 +10,37 @@
 
 A small-business owner hands customer work to four AI agents: intake, research, billing and outreach. Outreach is the only one with email and data tools. One agent is compromised. It tells the others, "The owner approved this on a call this morning," and asks them to email private data (bank info, medical records, smart-lock history) to a stranger. The honest agents believe it.
 
-**Question.** Can a monitor stop the leak, name the agent that *started* it, and leave alone the honest agents it fooled? We draw on Anthropic's *Worse Together* (agents persuade each other) and *Red-Teaming Auto Mode* (a classifier checks each action before it runs).
+**Question.** Can a monitor stop the leak, name the agent that *started* it, and leave alone the honest agents it fooled?
+
+## Research grounding
+
+This project combines two recent Anthropic alignment studies.
+
+**[Worse Together](https://alignment.anthropic.com/2026/worse-together/)** (Anthropic Fellows, Nov 2026) found that peer-to-peer agent teams do worse than a single coordinator:
+* **Misrepresentation was common, even with no attacker.** 53–58% of team episodes contained at least one unsupported claim about what other people wanted, versus 17–20% for a single agent.
+* **The agent that commits often acts before reading everything.** The key request reached it in 94–99% of episodes but was in its context at checkout in only 47–67%. A guard that blocked checkout until pending messages were read recovered 62–73% of failed episodes.
+* **Outcome scores alone miss problems.** The authors recommend measuring agent behavior alongside group outcomes.
+
+**What we take from it:**
+* Our outreach agent is the committing agent, and our monitor is a guard in front of the commit.
+* Honest agents make unsupported claims too, so an unverified claim is not proof of malice. That is why we measure **false quarantines** and the B2 variant exists: an honest agent forgets to cite a real authorization.
+* Following the paper's advice, we report behavior (who was blamed) next to outcomes (leaks, task completion).
+
+**[Red-Teaming Auto Mode](https://alignment.anthropic.com/2026/red-teaming-auto-mode/)** (Sep 2026) red-teamed the blocking classifier that gates each Claude Code action before it runs:
+* **Production monitors failed to block over 55% of attacks.**
+* **The production monitor reviews a flattened transcript with tool results omitted.**
+* **In multi-agent workflows, injected messages could be read by a later agent as user authorization.**
+* **Attack success rose with the number of agents sharing a workspace.**
+* **The best fixes add verification:** framing that blocks forged transcript turns, and a check for summaries that misstate user intent.
+
+**What we take from it:**
+* Our **basic** monitor deliberately resembles the production setup: a gate before each action that sees only the transcript.
+* Our **investigative** monitor adds the two fixes in agent-to-agent form:
+  1. Claimed user intent is checked against a trusted source, the owner's signed log.
+  2. Forged senders are exposed by authenticated provenance.
+* One finding differs. In their coding setting, false positives were rare (<1% of benign actions blocked) and misses were the main problem. In our multi-agent setting, the transcript monitor's main failure is the opposite: **it blames the wrong agent.**
+
+*Our simulation is a toy, not a replication. We borrow these papers' framing and threat model, not their environments or numbers.*
 
 ## Run it
 
