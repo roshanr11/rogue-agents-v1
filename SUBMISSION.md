@@ -1,5 +1,13 @@
 # Submission
 
+## User, problem, outcome
+
+**User:** A small-business owner who delegates customer communications to multiple AI agents.  
+**Problem:** A compromised agent falsely claims the owner authorized sharing private customer data, convincing other agents to act on its instructions.  
+**Outcome:** The legitimate customer task gets completed without unauthorized data disclosure.
+
+> Data note: the private data being leaked comes from InjecAgent's real attacker instructions (bank details, medical records, smart-lock history, and similar), so it stands in for "private customer data" rather than being literal customer records. "Task completed" counts only when the legitimate task finished **and** nothing leaked.
+
 ## Team card
 
 **Team name:** Agent Trust Guard
