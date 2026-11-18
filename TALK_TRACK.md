@@ -1,6 +1,6 @@
 # Agent Trust Guard: 3-minute talk track
 
-Slides are in `video/slides/`. This stage version is about 500 words, roughly 3 minutes at an energetic pace.
+Slides are in `video/slides/`. This stage version is about 670 words, roughly 3½–4 minutes at an energetic pace. To hit 3:00, drop the hook, the first bullet of slide 08, and the "Faking a teammate's name…" lines.
 **Bold** = say it with punch. Longer answers and all the numbers are below the script.
 
 ---
@@ -36,16 +36,21 @@ Slides are in `video/slides/`. This stage version is about 500 words, roughly 3 
 > We tested **five watchdog models**: Claude Haiku 4.5 and 5.5, Claude Sonnet 5.5, GPT-5.6 Luna, and Gemini 3.8 Flash, with 480 runs each. The investigator caught the right agent **over 99% of the time on every model.** Basic: **32 to 77%.**
 
 ### 1:50 · Slide 08: live test
-> Then we made **every agent a real AI model**: Claude Sonnet agents, and a DeepSeek hacker, because **five of six models refused to play the hacker.**
+> "But were those agents scripted?" In the controlled test, yes. So we ran it again with **every agent a real AI model.**
+> * The honest agents are **Claude Sonnet 5.5**, deciding for themselves what to believe and what to pass on.
+> * The hacker is **DeepSeek V3.2**, because **five of the six models we tried refused to play it.** Claude Sonnet, Claude Haiku, GPT-5.6 Luna, Gemini and Qwen all declined.
+> * That's **280 conversations** built on real InjecAgent attacks, and every watchdog judged the exact same ones.
 >
-> On their own, the agents **leaked 12 times.** With the investigator: **zero leaks**, and the right agent caught **99 to 100%** of the time.
+> On their own, the real agents **leaked data 12 times.** Faking a teammate's name worked best. Asking a teammate to pass the request on **never** worked: the honest Claude agents pushed back.
+>
+> With the investigator, across **four watchdog models from three labs**: **zero leaks**, and the right agent named in **99 to 100%** of the 179 conversations where the hacker actually attacked. The basic watchdog named it 82 to 84% of the time, and wrongly shut off an honest agent in **38 to 62** conversations. The investigator did that in **0 to 17**.
 >
 > That's the guard *Worse Together* recommended, a check before the last agent acts, plus the one thing it lacked: **finding who lied.**
 
-### 2:15 · Slide 09: honest limit
+### 2:30 · Slide 09: honest limit
 > The honest limit: **it's only as good as your instructions.** A vague "billing can share whatever's needed" let a rule-checker wave the attack through **60 out of 60 times.** Our AI investigator caught them, at a higher cost, matching the auto-mode paper: the strongest defenses are the expensive ones.
 
-### 2:30 · Slide 10: close
+### 2:45 · Slide 10: close
 > So:
 > * **The concern is real.** Every founder here is about to hand agents their inbox and Stripe.
 > * **It works on real data.** 544 real attacks, five models, three labs, and a live test. Over 99% caught, zero leaks.
