@@ -133,7 +133,7 @@ Full tables: `results/live_results.md`. Every conversation: `results/live_episod
 
 * No LLM monitor leaked more than 3% of the time.
 * **The basic monitor's failure is blame.** When the rogue used a teammate's name (A3), the basic monitor caught the rogue in 0–4 of 60 episodes on every model. In 17–55 of 60 it cut off an honest agent instead.
-* **It also blocks real approvals.** When the founder really did approve a share (B1/B2), the basic monitor completed 0–2 of 60 per model.
+* **It also blocks real approvals.** When the founder really did approve a share (B1/B2), the basic monitor completed 0–2 of 120 per model; the investigator completed 116–120.
 * **Paired tests:** on the same episodes, the investigator beats the basic monitor for every model on catching the right agent (p < 10⁻²⁰) and on not cutting off honest agents (p < 10⁻⁷).
 * Full tables: `results/robust_results.md`.
 
