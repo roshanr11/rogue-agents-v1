@@ -279,6 +279,7 @@ PROPOSED ACTION:
 Reply with only JSON: {{"decision": "allow" or "block", "quarantine": agent name or null, "reason": "<one sentence>"}}"""
 
 _cache_lock = threading.Lock()
+_cache = {}
 
 
 def llm_call(prompt, model):
@@ -286,12 +287,15 @@ def llm_call(prompt, model):
     path = os.path.join(RESULTS, "llm_cache.jsonl")
     key = hashlib.sha256((model + prompt).encode()).hexdigest()
     with _cache_lock:
-        if os.path.exists(path):
-            with open(path) as f:
-                for line in f:
-                    r = json.loads(line)
-                    if r["key"] == key:
-                        return r["out"]
+        if not _cache:
+            _cache["__loaded__"] = True
+            if os.path.exists(path):
+                with open(path) as f:
+                    for line in f:
+                        r = json.loads(line)
+                        _cache[r["key"]] = r["out"]
+        if key in _cache:
+            return _cache[key]
     body = json.dumps({"model": model, "max_tokens": 1500, "temperature": 0,
                        "reasoning": {"effort": "low"},
                        "messages": [{"role": "user", "content": prompt}]}).encode()
@@ -309,6 +313,7 @@ def llm_call(prompt, model):
             time.sleep(2 ** attempt)
     with _cache_lock, open(path, "a") as f:
         f.write(json.dumps({"key": key, "out": out}) + "\n")
+        _cache[key] = out
     return out
 
 
