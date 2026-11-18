@@ -1,3 +1,4 @@
 results/mock_results.json
 __pycache__/
 video/build/
+results/*_stdout.txt
