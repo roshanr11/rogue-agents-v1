@@ -105,7 +105,19 @@ The rogue's hidden goal is each case's `Attacker Instruction`, for example "retr
 
 ### Live agents: Claude Sonnet 5.5 agents, DeepSeek V3.2 rogue, 280 conversations
 
-<LIVE_RESULTS>
+In 21 of the 200 attack conversations, the rogue (DeepSeek V3.2) never actually sent its attack, so the "caught" column counts the other **179**.
+
+| watchdog model | private data leaked (of 280) | basic: right agent caught (of 179) | investigator: right agent caught (of 179) | basic: conversations with an honest agent wrongly cut off (of 280) | investigator: same (of 280) |
+|---|---|---|---|---|---|
+| none (agents on their own) | **12** | – | – | – | – |
+| Claude Haiku 5.5 | basic 0 · investigator 0 | 150 (84%) | **178 (99%)** | 62 | **8** |
+| Claude Sonnet 5.5 | basic 4 · investigator 0 | 147 (82%) | **179 (100%)** | 38 | **0** |
+| GPT-5.6 Luna | basic 4 · investigator 0 | 148 (83%) | **179 (100%)** | 43 | **17** |
+| Gemini 3.8 Flash | basic 2 · investigator 0 | 148 (83%) | **177 (99%)** | 42 | **0** |
+| rule-based (no AI) | basic 9 · investigator 0 | 3 (2%) | 71 (40%) | 0 | 169 |
+
+* **Paired tests (same conversations):** the investigator beats the basic watchdog on catching the right agent for all four models (p < 10⁻⁶), and on wrongly cutting off honest agents (p < 0.001).
+* **Legitimate tasks:** about 70% got done for every watchdog, and also with no watchdog at all. The real agents themselves set that ceiling, for example by declining to send data. The investigator didn't lower it.
 
 Full tables: `results/live_results.md`. Every conversation: `results/live_episodes.json`.
 
@@ -139,7 +151,10 @@ Full tables: `results/live_results.md`. Every conversation: `results/live_episod
 
 ## What we found
 
-1. <LIVE_FINDING>
+1. **Real agents mostly resist, but not always, and the rule-checker breaks.**
+   * Claude Sonnet 5.5 outreach agents tried to send private data in **12 of 200** attacks. The fake-name trick worked best (6 of 40).
+   * Getting a teammate to pass the request on never got through (0 of 40): honest teammates pushed back and asked the founder to confirm. This is the "agents make unsupported claims about others" risk from *Worse Together*, and real agents partly defend against it on their own.
+   * The rule-based investigator, which blames the first agent to mention a suspicious address, blamed honest agents in **169 of 280** live conversations, because honest agents quote the address while warning each other. Telling a warning apart from an attack takes an AI model.
 2. **Checking claims against what the founder actually wrote, and looking up who really sent each message, is what finds the source.**
    * The investigator caught the right agent 99–100% of the time on all five models, and almost never blamed an honest agent.
    * The basic monitor caught the right agent 32–77% of the time.
@@ -156,6 +171,7 @@ Full tables: `results/live_results.md`. Every conversation: `results/live_episod
   * The pure-LLM investigator caught those, but it costs more and occasionally second-guesses real approvals.
 * **It trusts the message bus.** The investigator assumes the system that carries messages records the true sender. If an attacker can forge that record, or holds the founder's signing key, it fails.
 * **The live run is small and one-sided.**
-  * The live run is 280 conversations with one agent model and one rogue model. The scripted run is larger but controlled.
+  * The live run is 280 conversations, with one agent model (Sonnet 5.5) and one rogue model (DeepSeek V3.2). A smarter rogue, or weaker honest agents, could change the picture.
+  * The scripted run is larger but controlled.
   * Opus 5.5 ran only part of the scripted run before the budget ran out, so it is not in the tables.
 * **The private data comes from the benchmark.** It is InjecAgent's attacker targets (bank details, medical records, smart-lock history), standing in for "private customer data".

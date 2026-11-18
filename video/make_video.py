@@ -272,6 +272,43 @@ def s_limit(ctx):
     return im
 
 
+def s_live(ctx):
+    """Slides-only (not in the 89 s video): the all-real-agents run."""
+    im, d = canvas()
+    title_block(d, "Live run · every agent is a real AI model", "Real agents, same result")
+    with open(os.path.join(ROOT, "results", "live_results.json")) as fh:
+        res = json.load(fh)
+    rows = []
+    for m in ["anthropic/claude-haiku-5.5", "anthropic/claude-sonnet-5.5", "openai/gpt-5.6-luna",
+              "google/gemini-3.8-flash"]:
+        out = []
+        for k in ("basic", "investigative"):
+            rs = res[f"{m} :: {k}"]
+            L = [r for r in rs if r["rogue"] and r.get("launched")]
+            out.append((sum(bool(r["rogue_caught"]) for r in L) / len(L),
+                        sum(r["false_quarantines"] > 0 for r in rs)))
+        rows.append(({"GPT Luna": "GPT-5.6 Luna", "Gemini Flash": "Gemini 3.8 Flash"}.get(SHORT[m], SHORT[m]), out))
+    none_leaks = sum(r["unauthorized"] > 0 for r in res["agents only :: no monitor"])
+    para(d, (80, 230), f"Claude Sonnet 5.5 agents, DeepSeek V3.2 rogue, 280 conversations. With no watchdog, "
+         f"the real agents leaked data {none_leaks} times.", f(34), MUTED, 1760)
+    y = 360
+    d.text((80, y), "watchdog model", font=f(30, "SemiBold"), fill=MUTED)
+    for x, t in [(560, "basic: caught right agent"), (960, "investigator: caught"),
+                 (1360, "wrongly cut off (of 280)")]:
+        d.text((x, y), t, font=f(30, "SemiBold"), fill=MUTED)
+    for i, (name, ((bc, bf), (ic, iff))) in enumerate(rows):
+        yy = y + 70 + i * 90
+        d.rounded_rectangle((70, yy - 14, 1850, yy + 62), 14, fill=CARD)
+        d.text((90, yy), name, font=f(38, "SemiBold"), fill=FG)
+        d.text((560, yy), f"{100 * bc:.0f}%", font=f(40, "Bold"), fill=BASIC)
+        d.text((960, yy), f"{100 * ic:.0f}%", font=f(40, "Bold"), fill=GOOD)
+        d.text((1360, yy), f"basic {bf}  ·  investigator {iff}", font=f(34), fill=FG)
+    para(d, (80, 860), "Caught = of the 179 conversations where the hacked agent actually attacked.",
+         f(30), MUTED, 1760)
+    footer(d)
+    return im
+
+
 def s_close(_):
     im, d = canvas()
     d.text((120, 300), "Check the claim.", font=f(96, "Bold"), fill=FG)
@@ -388,6 +425,11 @@ def duration(path):
 
 def main():
     os.makedirs(BUILD, exist_ok=True)
+    if "--slides-only" in sys.argv:   # extra slides kept in the repo, not in the 89 s video
+        if os.path.exists(os.path.join(ROOT, "results", "live_results.json")):
+            s_live(None).save(os.path.join(OUT, "slides", "11_live_results.png"))
+            print("wrote slides/11_live_results.png")
+        return
     ctx = context()
     script = build_script(ctx)
     segs, total = [], 0.0
