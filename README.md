@@ -107,3 +107,15 @@ above hold the attack fixed with a scripted rogue while every honest decision (s
 * **The attack is scripted in real runs** because the model refused the rogue role, so these numbers do not show an adaptive rogue.
 * Honest slips are injected at 10% of sends (identical across monitors and modes), not observed in the wild.
 
+
+## Demo video
+
+`video/demo_draft_piper.mp4` is 69 s, 1080p. Slides are HTML with every number read from `results/*.json` and the seed-5
+transcripts. Rebuild:
+
+```bash
+python video/make_video.py --tts openrouter        # voiceover via OpenRouter (openai/gpt-audio-mini)
+python video/make_video.py --tts piper --piper-model en_US-ryan-high.onnx   # local open-source voice (draft)
+```
+
+The committed draft uses the local Piper voice because the OpenRouter key hit its spend limit while this was being made.
