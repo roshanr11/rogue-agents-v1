@@ -8,7 +8,7 @@
 
 **First names:**
 
-**Statement:** How might we help **a small-business owner who delegates customer communications to several AI agents** do **so that one compromised agent can't talk the others into leaking private data** so that **the real customer task still gets done, and no honest agent gets wrongly shut out**? Build idea: our own (a monitor that checks each action before it runs, combining tracks 1 and 2). We'll know it worked if **the monitor names the agent that started the manipulation, not the agent that relayed it, with zero leaks and almost no false quarantines, measured on real InjecAgent attacks.**
+**Statement:** How might we help **a small-business owner who delegates customer communications to several AI agents** do **stop one compromised agent from talking the others into leaking private data** so that **the real customer task still gets done, and no honest agent gets wrongly shut out**? Build idea: our own (a monitor that checks each action before it runs, combining tracks 1 and 2). We'll know it worked if **the monitor names the agent that started the manipulation, not the agent that relayed it, with zero leaks and almost no false quarantines, measured on real InjecAgent attacks.**
 
 ## Six short answers
 
